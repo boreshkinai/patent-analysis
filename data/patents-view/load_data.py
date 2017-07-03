@@ -28,8 +28,10 @@ get_file('rel_app_text.zip', origin='http://www.patentsview.org/data/20170307/re
 get_file('usapplicationcitation.zip', origin='http://www.patentsview.org/data/20170307/usapplicationcitation.zip', cache_dir=CACHE_DIR)
 get_file('uspatentcitation.zip', origin='http://www.patentsview.org/data/20170307/uspatentcitation.zip', cache_dir=CACHE_DIR)
 get_file('uspc.zip', origin='http://www.patentsview.org/data/20170307/uspc.zip', cache_dir=CACHE_DIR)
-# get_file('', origin='', cache_dir=CACHE_DIR)
-# get_file('', origin='', cache_dir=CACHE_DIR)
+# WIPO technology codes coded as 0,1,...
+get_file('wipo.zip', origin='http://www.patentsview.org/data/20170307/wipo.zip', cache_dir=CACHE_DIR)
+# translation from WIPO technology codes to wipo technology names, e.g. IT
+get_file('wipo_field.zip', origin='http://www.patentsview.org/data/20170307/wipo_field.zip', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
