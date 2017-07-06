@@ -15,6 +15,7 @@ get_file('figures.zip', origin='http://www.patentsview.org/data/20170307/figures
 get_file('inventor.zip', origin='http://www.patentsview.org/data/20170307/inventor.zip', cache_dir=CACHE_DIR)
 get_file('ipcr.zip', origin='http://www.patentsview.org/data/20170307/ipcr.zip', cache_dir=CACHE_DIR)
 get_file('lawyer.zip', origin='http://www.patentsview.org/data/20170307/lawyer.zip', cache_dir=CACHE_DIR)
+# Disambiguated location data, including latitude and longitude
 get_file('location.zip', origin='http://www.patentsview.org/data/20170307/location.zip', cache_dir=CACHE_DIR)
 get_file('location_assignee.zip', origin='http://www.patentsview.org/data/20170307/location_assignee.zip', cache_dir=CACHE_DIR)
 get_file('location_inventor.zip', origin='http://www.patentsview.org/data/20170307/location_inventor.zip', cache_dir=CACHE_DIR)
