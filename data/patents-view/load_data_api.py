@@ -66,11 +66,8 @@ def fetch_month_data(year, month):
         if total_patent_count > 0:
             num_pages = math.floor(total_patent_count / NUM_PATENT_PER_PAGE) + 1
             for page in range(2, num_pages+2):
-                try:
+                if response_json['patents'] != None
                     patents.extend(response_json['patents'])
-                finally:
-                    # This is in case there were no patents
-                    do_nothing = True
 
                 format_part = '&o={"page":%d,"per_page":%d}' %(page, NUM_PATENT_PER_PAGE)
                 url = get_full_url(q_part, format_part)
