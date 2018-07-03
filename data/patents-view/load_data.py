@@ -6,7 +6,6 @@ ROOT_URL = 'http://www.patentsview.org/data/' + DATA_TIMESTAMP + '/'
 
 get_file('application.tsv.tsv.zip', origin=ROOT_URL+'application.tsv.zip', cache_dir=CACHE_DIR)
 get_file('assignee.tsv.zip', origin=ROOT_URL+'assignee.tsv.zip', cache_dir=CACHE_DIR)
-get_file('brf_sum_text.tsv.zip', origin=ROOT_URL+'brf_sum_text.tsv.zip', cache_dir=CACHE_DIR)
 get_file('claim.tsv.zip', origin=ROOT_URL+'claim.tsv.zip', cache_dir=CACHE_DIR)
 get_file('cpc_current.tsv.zip', origin=ROOT_URL+'cpc_current.tsv.zip', cache_dir=CACHE_DIR)
 get_file('cpc_group.tsv.zip', origin=ROOT_URL+'cpc_group.tsv.zip', cache_dir=CACHE_DIR)
@@ -35,6 +34,7 @@ get_file('uspc.tsv.zip', origin=ROOT_URL+'uspc.tsv.zip', cache_dir=CACHE_DIR)
 get_file('wipo.tsv.zip', origin=ROOT_URL+'wipo.tsv.zip', cache_dir=CACHE_DIR)
 # translation from WIPO technology codes to wipo technology names, e.g. IT
 get_file('wipo_field.tsv.zip', origin=ROOT_URL+'wipo_field.tsv.zip', cache_dir=CACHE_DIR)
+get_file('brf_sum_text.tsv.zip', origin=ROOT_URL+'brf_sum_text.tsv.zip', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
 # get_file('', origin='', cache_dir=CACHE_DIR)
