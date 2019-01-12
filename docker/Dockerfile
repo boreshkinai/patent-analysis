@@ -37,7 +37,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py
 
-RUN pip install celery tensorflow-gpu==1.8.0 tensorboard=1.8.0 statsmodels gitpython
+RUN pip install celery tensorflow-gpu==1.8.0 tensorboard==1.8.0 statsmodels gitpython
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
