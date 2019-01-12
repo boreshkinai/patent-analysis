@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
 MAINTAINER Boris Oreshkin <boris.oreshkin@mail.mcgill.ca>
 
@@ -24,6 +24,8 @@ RUN apt-get install -y curl grep sed dpkg && \
 
 ENV PATH /opt/conda/bin:$PATH
 
+RUN conda install python=3.6.7
+
 RUN mkdir -p -m 700 /root/.jupyter/ && \
     echo "c.NotebookApp.ip = '0.0.0.0'" >> /root/.jupyter/jupyter_notebook_config.py && \
     echo "c.NotebookApp.password = 'sha1:3f84353ad3f5:d1b6eeb440acbc49330646714898ae27c8dd56c2'" >> /root/.jupyter/jupyter_notebook_config.py
@@ -35,7 +37,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py
 
-RUN pip install celery tensorflow-gpu==1.4.1 tensorboard=1.8.0 statsmodels gitpython
+RUN pip install celery tensorflow-gpu==1.8.0 tensorboard=1.8.0 statsmodels gitpython
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
