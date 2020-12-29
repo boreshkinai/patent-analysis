@@ -4,7 +4,7 @@ MAINTAINER Boris Oreshkin <boris.oreshkin@mail.mcgill.ca>
 
 RUN apt-get update --fix-missing && apt-get install -y wget bzip2 ca-certificates \
     libglib2.0-0 libxext6 libsm6 libxrender1 \
-    git mercurial subversion
+    git mercurial subversion unzip
 
 RUN echo 'export PATH=/opt/conda/bin:$PATH' > /etc/profile.d/conda.sh && \
     wget --no-check-certificate --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
@@ -37,7 +37,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py
 
-RUN pip install keras celery tensorflow-gpu==1.8.0 tensorboard==1.8.0 statsmodels gitpython
+RUN pip install keras==2.1.2 celery tensorflow-gpu==1.5.0 tensorboard==2.4.0 statsmodels gitpython "dask[complete]" pyarrow
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
