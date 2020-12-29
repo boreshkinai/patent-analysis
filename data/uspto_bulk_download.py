@@ -27,7 +27,6 @@ numeric = lambda x: pd.to_numeric(x, errors='coerce')
 DATASETS_SPEC = {
     'patent': {
         'index': ['id'],
-        'dtype': {'date': 'datetime64[ns]', 'num_claims': 'int16'},
         'usecols': ['id', 'type', 'number', 'country', 'date', 'title', 'kind', 'num_claims'],
         'parse_dates': ['date'],
         'parse_numeric': {'num_claims': np.int16},
@@ -35,12 +34,10 @@ DATASETS_SPEC = {
     },
     'uspatentcitation': {
         'index': ['patent_id'],
-        'dtype': {},
-        'usecols': [],
-        'parse_dates': [],
-        'parse_numeric': {},
+        'usecols': ['uuid', 'patent_id', 'citation_id', 'date', 'kind', 'country', 'category', 'sequence'],
+        'parse_dates': ['date'],
+        'parse_numeric': {'sequence': np.int16},
         'drop_columns': [],
-        
     },
 #     'location': {
 #         'index': ['id'],
@@ -83,15 +80,18 @@ def prepare_datasets_cached(dataset_name: str,
         
         print("Create dask local cluster")
         ncpus = len(os.sched_getaffinity(0))
-        client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')
+        client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')\
+        
+        if len(params['usecols']) == 0:
+            print("Empty usecols, no dataset produced. Please specify columns to use in the dataset in usecols")
+            return
     
-        print(f"Creating parquete {dataset_name}.parquet")
+        print(f"Creating parquet {dataset_name}.parquet")
         ddf = dask.read_csv(os.path.join(local_storage, file_name_tsv),
                             sep='\t', error_bad_lines=False, 
                             dtype=str, 
                             usecols=params['usecols'],
-                            quoting=csv.QUOTE_NONNUMERIC,
-#                             engine='python'
+                            engine='python'
                             )
         
         for k in params['parse_dates']:
@@ -109,7 +109,7 @@ def prepare_datasets_cached(dataset_name: str,
         ddf.to_parquet(os.path.join(local_storage, f"{dataset_name}.parquet"), engine='pyarrow', schema="infer")
 
         print(f"Transferring to permanent storage {dataset_name}")
-        os.system(f"rsync -hvrt --progress {local_storage}/* {permanent_storage}/")
+        os.system(f"rsync -hvrt --progress {local_storage}/{dataset_name}* {permanent_storage}/")
         
         client.close()
         
