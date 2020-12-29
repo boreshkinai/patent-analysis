@@ -15,14 +15,6 @@ from dask.distributed import Client
 DATA_TIMESTAMP = '20171226'
 ROOT_URL = 'http://www.patentsview.org/data/' + DATA_TIMESTAMP + '/'
 
-DATASETS = ['patent.tsv.zip', 
-            'uspatentcitation.tsv.zip',
-            ]
-DATASETS_EXCLUDE_COLUMNS = {'patent.tsv.zip': ['abstract', 'title'],
-                            'uspatentcitation.tsv.zip': [],
-                            }
-
-numeric = lambda x: pd.to_numeric(x, errors='coerce')
 
 DATASETS_SPEC = {
     'patent': {
@@ -43,22 +35,6 @@ DATASETS_SPEC = {
 #         'index': ['id'],
 #     },
 }
-
-
-def download_file_cached(file_name: str, drop_columns: List[str], local_storage: str, permanent_storage: str) -> None:
-    pathlib.Path(local_storage).mkdir(parents=True, exist_ok=True)
-    pathlib.Path("/tmp/patent-analysis/").mkdir(parents=True, exist_ok=True)
-    if not os.path.exists(f"{permanent_storage}/{file_name}"):
-        print(f"Downloading {file_name} locally")
-        get_file(file_name, origin=os.path.join(ROOT_URL, file_name), cache_dir=local_storage, cache_subdir='')
-
-        print(f"Creating pickled {file_name}")
-        df = pd.read_csv(os.path.join(local_storage, file_name), sep='\t', error_bad_lines=False, dtype=str)
-        df.drop(columns=drop_columns, inplace=True)
-        df.to_pickle(path=f"{local_storage}/{file_name}.pickle")
-
-        print(f"Transferring to permanent storage {file_name}")
-        os.system(f"rsync -avr --progress {local_storage}* {permanent_storage}/")
         
 
 def prepare_datasets_cached(dataset_name: str, 
@@ -80,7 +56,7 @@ def prepare_datasets_cached(dataset_name: str,
         
         print("Create dask local cluster")
         ncpus = len(os.sched_getaffinity(0))
-        client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')\
+        client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')
         
         if len(params['usecols']) == 0:
             print("Empty usecols, no dataset produced. Please specify columns to use in the dataset in usecols")
@@ -113,8 +89,6 @@ def prepare_datasets_cached(dataset_name: str,
         
         client.close()
         
-        
-
 
 
 if __name__ == "__main__":
