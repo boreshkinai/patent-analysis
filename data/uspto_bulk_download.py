@@ -1,4 +1,3 @@
-from keras.utils import get_file
 from typing import List, Dict
 import pathlib
 import os
@@ -8,17 +7,25 @@ import argparse
 import sys
 import csv
 
+# Suppress TF warnings
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=FutureWarning)
+from keras.utils import get_file
+
 import dask.dataframe as dask
 from dask.distributed import Client
 
 
-DATA_TIMESTAMP = '20171226'
-ROOT_URL = 'http://www.patentsview.org/data/' + DATA_TIMESTAMP + '/'
+DATA_TIMESTAMP = '20200929'
+ROOT_URL = f"https://s3.amazonaws.com/data.patentsview.org/{DATA_TIMESTAMP}/download/"
+
 
 
 DATASETS_SPEC = {
     'patent': {
         'index': ['id'],
+        'usecols': [],
         'usecols': ['id', 'type', 'number', 'country', 'date', 'title', 'kind', 'num_claims'],
         'parse_dates': ['date'],
         'parse_numeric': {'num_claims': np.int16},
@@ -26,14 +33,54 @@ DATASETS_SPEC = {
     },
     'uspatentcitation': {
         'index': ['patent_id'],
-        'usecols': ['uuid', 'patent_id', 'citation_id', 'date', 'kind', 'country', 'category', 'sequence'],
+        'usecols': [],
+        'usecols': ['uuid', 'patent_id', 'citation_id', 'date', 'name', 'kind', 'country', 'category', 'sequence'],
         'parse_dates': ['date'],
         'parse_numeric': {'sequence': np.int16},
         'drop_columns': [],
     },
-#     'location': {
-#         'index': ['id'],
-#     },
+    'location': {
+        'index': ['id'],
+        'usecols': [],
+        'usecols': ['id', 'city', 'state', 'country', 'latitude', 'longitude', 'county'],
+        'parse_dates': [],
+        'parse_numeric': {'latitude': np.float32, 'longitude': np.float32},
+        'drop_columns': [],
+    },
+    'assignee': {
+        'index': ['id'],
+        'usecols': [],
+        'usecols': ['id', 'type', 'name_first', 'name_last', 'organization'],
+        'parse_dates': [],
+        'parse_numeric': {},
+        'drop_columns': [],
+    },
+    'patent_assignee': {
+        'index': ['patent_id'],
+        'usecols': [],
+        'usecols': ['patent_id', 'assignee_id', 'location_id'],
+        'parse_dates': [],
+        'parse_numeric': {},
+        'drop_columns': [],
+    },
+    'patent_inventor': {
+        'index': ['patent_id'],
+        'usecols': [],
+        'usecols': ['patent_id', 'inventor_id', 'location_id'],
+        'parse_dates': [],
+        'parse_numeric': {},
+        'drop_columns': [],
+    },
+    'persistent_inventor_disambig': {
+        'index': ['rawinventor_id'],
+        'usecols': [],
+        'usecols': ['rawinventor_id', 'disamb_inventor_id_20171226', 
+                    'disamb_inventor_id_20171003', 'disamb_inventor_id_20170808'],
+        'parse_dates': [],
+        'parse_numeric': {},
+        'drop_columns': [],
+    },
+    
 }
         
 
@@ -42,10 +89,11 @@ def prepare_datasets_cached(dataset_name: str,
                             params: Dict) -> None:
     
     pathlib.Path(local_storage).mkdir(parents=True, exist_ok=True)
-    pathlib.Path("/tmp/patent-analysis/").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(permanent_storage).mkdir(parents=True, exist_ok=True)
     file_name_zip = f"{dataset_name}.tsv.zip"
     file_name_tsv = f"{dataset_name}.tsv"
-    if not os.path.exists(os.path.join(permanent_storage, file_name_zip)):
+    dir_name_parquet = f"{dataset_name}.parquet"
+    if not os.path.exists(os.path.join(permanent_storage, dir_name_parquet)):
         print(f"Downloading {file_name_zip} locally in {local_storage}")
         get_file(file_name_zip, origin=os.path.join(ROOT_URL, file_name_zip), 
                  cache_dir=local_storage, cache_subdir='')
@@ -59,10 +107,15 @@ def prepare_datasets_cached(dataset_name: str,
         client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')
         
         if len(params['usecols']) == 0:
-            print("Empty usecols, no dataset produced. Please specify columns to use in the dataset in usecols")
+            print("Empty usecols, no dataset produced.")
+            df = pd.read_csv(os.path.join(local_storage, file_name_tsv), sep = '\t', error_bad_lines = False, 
+                             dtype = str, engine = 'python', nrows = 10)
+            print("Please specify columns to use in the dataset in usecols based on the dataset contents:")
+            print()
+            print(df.columns)
             return
     
-        print(f"Creating parquet {dataset_name}.parquet")
+        print(f"Creating parquet {dir_name_parquet}")
         ddf = dask.read_csv(os.path.join(local_storage, file_name_tsv),
                             sep='\t', error_bad_lines=False, 
                             dtype=str, 
@@ -81,8 +134,10 @@ def prepare_datasets_cached(dataset_name: str,
             
         ddf = ddf.set_index(params['index'])
         ddf = ddf.drop(columns=params['drop_columns'])
+        
+        ddf.repartition(npartitions=ddf.npartitions)
             
-        ddf.to_parquet(os.path.join(local_storage, f"{dataset_name}.parquet"), engine='pyarrow', schema="infer")
+        ddf.to_parquet(os.path.join(local_storage, f"{dir_name_parquet}"), engine='pyarrow', schema="infer")
 
         print(f"Transferring to permanent storage {dataset_name}")
         os.system(f"rsync -hvrt --progress {local_storage}/{dataset_name}* {permanent_storage}/")
