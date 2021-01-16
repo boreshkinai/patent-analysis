@@ -25,7 +25,6 @@ ROOT_URL = f"https://s3.amazonaws.com/data.patentsview.org/{DATA_TIMESTAMP}/down
 DATASETS_SPEC = {
     'patent': {
         'index': ['id'],
-        'usecols': [],
         'usecols': ['id', 'type', 'number', 'country', 'date', 'title', 'kind', 'num_claims'],
         'parse_dates': ['date'],
         'parse_numeric': {'num_claims': np.int16},
@@ -33,7 +32,6 @@ DATASETS_SPEC = {
     },
     'uspatentcitation': {
         'index': ['patent_id'],
-        'usecols': [],
         'usecols': ['uuid', 'patent_id', 'citation_id', 'date', 'name', 'kind', 'country', 'category', 'sequence'],
         'parse_dates': ['date'],
         'parse_numeric': {'sequence': np.int16},
@@ -41,7 +39,6 @@ DATASETS_SPEC = {
     },
     'location': {
         'index': ['id'],
-        'usecols': [],
         'usecols': ['id', 'city', 'state', 'country', 'latitude', 'longitude', 'county'],
         'parse_dates': [],
         'parse_numeric': {'latitude': np.float32, 'longitude': np.float32},
@@ -49,7 +46,6 @@ DATASETS_SPEC = {
     },
     'assignee': {
         'index': ['id'],
-        'usecols': [],
         'usecols': ['id', 'type', 'name_first', 'name_last', 'organization'],
         'parse_dates': [],
         'parse_numeric': {},
@@ -57,23 +53,22 @@ DATASETS_SPEC = {
     },
     'patent_assignee': {
         'index': ['patent_id'],
-        'usecols': [],
         'usecols': ['patent_id', 'assignee_id', 'location_id'],
+        'renamecols': {'location_id': 'location_id_assignee'},
         'parse_dates': [],
         'parse_numeric': {},
         'drop_columns': [],
     },
     'patent_inventor': {
         'index': ['patent_id'],
-        'usecols': [],
         'usecols': ['patent_id', 'inventor_id', 'location_id'],
+        'renamecols': {'location_id': 'location_id_inventor'},
         'parse_dates': [],
         'parse_numeric': {},
         'drop_columns': [],
     },
     'persistent_inventor_disambig': {
         'index': ['rawinventor_id'],
-        'usecols': [],
         'usecols': ['rawinventor_id', 'disamb_inventor_id_20171226', 
                     'disamb_inventor_id_20171003', 'disamb_inventor_id_20170808'],
         'parse_dates': [],
@@ -93,6 +88,7 @@ def prepare_datasets_cached(dataset_name: str,
     file_name_zip = f"{dataset_name}.tsv.zip"
     file_name_tsv = f"{dataset_name}.tsv"
     dir_name_parquet = f"{dataset_name}.parquet"
+    print(f"Preparing dataset {dataset_name}")
     if not os.path.exists(os.path.join(permanent_storage, dir_name_parquet)):
         print(f"Downloading {file_name_zip} locally in {local_storage}")
         get_file(file_name_zip, origin=os.path.join(ROOT_URL, file_name_zip), 
@@ -134,6 +130,8 @@ def prepare_datasets_cached(dataset_name: str,
             
         ddf = ddf.set_index(params['index'])
         ddf = ddf.drop(columns=params['drop_columns'])
+        if 'renamecols' in params.keys():
+            ddf = ddf.rename(columns=params['renamecols'])
         
         ddf.repartition(npartitions=ddf.npartitions)
             

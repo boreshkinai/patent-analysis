@@ -5,6 +5,7 @@ __pycache__/
 
 dask-worker-space/*
 dataset/*
+data/patents-view/
 .idea
 *.zip
 
