@@ -37,7 +37,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py
 
-RUN pip install keras==2.1.2 celery tensorflow-gpu==1.5.0 tensorboard==2.4.0 statsmodels gitpython "dask[complete]" pyarrow
+RUN pip install keras==2.1.2 celery tensorflow-gpu==1.5.0 tensorboard==2.4.0 statsmodels gitpython "dask[complete]" pyarrow seaborn
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
