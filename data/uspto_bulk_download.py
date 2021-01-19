@@ -67,10 +67,9 @@ DATASETS_SPEC = {
         'parse_numeric': {},
         'drop_columns': [],
     },
-    'persistent_inventor_disambig': {
-        'index': ['rawinventor_id'],
-        'usecols': ['rawinventor_id', 'disamb_inventor_id_20171226', 
-                    'disamb_inventor_id_20171003', 'disamb_inventor_id_20170808'],
+    'cpc_current': {
+        'index': ['patent_id'],
+        'usecols': ['patent_id', 'section_id', 'subsection_id', 'group_id', 'subgroup_id', 'category', 'sequence'],
         'parse_dates': [],
         'parse_numeric': {},
         'drop_columns': [],
