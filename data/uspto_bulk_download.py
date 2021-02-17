@@ -31,7 +31,7 @@ DATASETS_SPEC = {
         'drop_columns': [],
     },
     'uspatentcitation': {
-        'index': ['patent_id'],
+        'index': ['citation_id'],
         'usecols': ['uuid', 'patent_id', 'citation_id', 'date', 'name', 'kind', 'country', 'category', 'sequence'],
         'parse_dates': ['date'],
         'parse_numeric': {'sequence': np.int16},
@@ -99,7 +99,7 @@ def prepare_datasets_cached(dataset_name: str,
         
         print("Create dask local cluster")
         ncpus = len(os.sched_getaffinity(0))
-        client = Client(n_workers=ncpus, threads_per_worker=1, memory_limit='6GB', dashboard_address='6006')
+        client = Client(n_workers=32, threads_per_worker=2, memory_limit='8GB', dashboard_address='6006')
         
         if len(params['usecols']) == 0:
             print("Empty usecols, no dataset produced.")
