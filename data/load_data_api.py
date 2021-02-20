@@ -8,6 +8,7 @@ import os
 import pandas as pd
 from tqdm.auto import tqdm
 from typing import List
+import argparse
 
 START_YEAR = 1976
 START_MONTH = 1
@@ -105,6 +106,10 @@ def get_month_file_parquet_name(json_file_name: str) -> str:
     return ".".join(json_file_name.split(".")[:-1]) + '.parquet'
 
 
+def strip_extension(json_file_name: str) -> str:
+    return ".".join(json_file_name.split(".")[:-1])
+
+
 def save_month_data(json_file_name, patents, is_success, log_txt):
     log_file_name = json_file_name + '.log'
     gz_file = get_month_file_zipped_name(json_file_name)
@@ -130,8 +135,9 @@ def flatten_column(df: pd.DataFrame, column: str, index: str) -> pd.DataFrame:
     return pd.concat(flat_list)
 
 
-def flatten_dataframe(df: pd.DataFrame, columns:List[str], index: str) -> pd.DataFrame:
-    df_out = df.drop(columns=columns)
+def flatten_dataframe(df: pd.DataFrame, columns: List[str], 
+                      index: str, drop_columns: List[str] = []) -> pd.DataFrame:
+    df_out = df.drop(columns = columns + drop_columns)
     df_out = df_out.set_index(index)
     for c in columns:
         df_c = flatten_column(df, column=c, index=index)
@@ -139,25 +145,62 @@ def flatten_dataframe(df: pd.DataFrame, columns:List[str], index: str) -> pd.Dat
     return df_out
 
 
-pathlib.Path(RESULTS_DIR).mkdir(parents=True, exist_ok=True)
-for year in range(START_YEAR, END_YEAR+1):
-    for month in range(START_MONTH, END_MONTH + 1):
-        print('Processing year %d month %d' %(year, month))
-        
-        json_file_name = get_month_file_name(RESULTS_DIR, year, month)
-        if not os.path.isfile(json_file_name):
-            patents, is_success, log_txt = fetch_month_data(year, month)
-            save_month_data(json_file_name, patents, is_success, log_txt)
+def save_dataset(source_json: str, 
+                 flatten_columns: List[str], 
+                 drop_columns: List[str], 
+                 parse_dates: List[str], 
+                 index: str, 
+                 dataset_name: str) -> None:
+    
+    if not os.path.isfile(dataset_name):
+        df = pd.read_json(source_json)
+        if not df.empty:
+            df_flat = flatten_dataframe(df, index = index, columns = flatten_columns, 
+                                        drop_columns = drop_columns)
             
-        parquet_file_name = get_month_file_parquet_name(json_file_name)
-        if not os.path.isfile(parquet_file_name):
-            df = pd.read_json(json_file_name)
-            if not df.empty:
-                df_flat = flatten_dataframe(df, index="patent_number",
-                                            columns=["inventors", "assignees", "cited_patents", 
-                                                     "citedby_patents", "cpcs"])
-                df_flat.to_parquet(parquet_file_name)
+            for k in parse_dates:
+                df_flat[k] = pd.to_datetime(df_flat[k], errors='coerce')
+                
+            df_flat.to_parquet(dataset_name)
+    return
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--start_year', type=int, default=START_YEAR)
+    parser.add_argument(
+        '--start_month', type=int, default=START_MONTH)
+    parser.add_argument(
+        '--end_year', type=int, default=END_YEAR)
+    args = parser.parse_args()
+
+    pathlib.Path(RESULTS_DIR).mkdir(parents=True, exist_ok=True)
+    for year in range(args.start_year, args.end_year+1):
+        for month in range(args.start_month, END_MONTH + 1):
+            print('Processing year %d month %d' %(year, month))
+
+            json_file_name = get_month_file_name(RESULTS_DIR, year, month)
+            if not os.path.isfile(json_file_name):
+                patents, is_success, log_txt = fetch_month_data(year, month)
+                save_month_data(json_file_name, patents, is_success, log_txt)
+
+            dataset_name = strip_extension(json_file_name) + "-patent.parquet"
+            save_dataset(source_json = json_file_name, 
+                         flatten_columns = ["inventors", "assignees", "cpcs"], 
+                         drop_columns = ["applications", "cited_patents", "citedby_patents"], 
+                         parse_dates = ["patent_date"],
+                         index = "patent_number", 
+                         dataset_name = dataset_name)
             
+            dataset_name = strip_extension(json_file_name) + "-citations.parquet"
+            save_dataset(source_json = json_file_name, 
+                         flatten_columns = ["cited_patents", "citedby_patents"], 
+                         drop_columns = ["applications", "inventors", "assignees", 
+                                         "cpcs", "patent_title", "patent_kind", "patent_type"], 
+                         parse_dates = ["patent_date", "citedby_patent_date", "cited_patent_date"],
+                         index = "patent_number", 
+                         dataset_name = dataset_name)
         
 
 
