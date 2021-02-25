@@ -1,4 +1,4 @@
-FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu16.04
 
 MAINTAINER Boris Oreshkin <boris.oreshkin@mail.mcgill.ca>
 
@@ -37,7 +37,9 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py tensorflow-mkl tensorboard
 
-RUN pip install keras celery statsmodels gitpython "dask[complete]" pyarrow seaborn
+COPY ./requirements.txt ./requirements.txt
+
+RUN pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 

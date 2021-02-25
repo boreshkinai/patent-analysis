@@ -1,1 +1,8 @@
-
+torch==1.7.1+cu101
+keras 
+celery 
+statsmodels 
+gitpython 
+dask[complete] 
+pyarrow 
+seaborn
