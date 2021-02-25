@@ -3,14 +3,14 @@ import time
 from typing import Dict
 from torch.utils.tensorboard import SummaryWriter
 from models.learners import AbstractModel
-from datasets.loaders import EpisodeSampler
+from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import re
 
 
 class Trainer:
-    def __init__(self, model: AbstractModel, train_dataset: EpisodeSampler,
-                 val_datasets: Dict[str, EpisodeSampler],
+    def __init__(self, model: AbstractModel, train_dataset: DataLoader,
+                 val_datasets: Dict[str, DataLoader],
                  config: Dict, rundir: str):
         self.model = model
         self.train_dataset = train_dataset

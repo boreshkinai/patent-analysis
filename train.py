@@ -3,18 +3,24 @@ import argparse
 import json
 from common.training.trainer import Trainer
 from typing import Dict
-from datasets.loaders import BatchSampler
+from data import Dataset, DataLoader
 import numpy as np
 from models import Model
 
 
 def train(config: Dict, rundir: str):
+    
+    train_dataset = Dataset(split='train', **config)
+    train_loader = DataLoader(train_dataset, drop_last=True, shuffle=True, **config)
+    
+    test_dataset = Dataset(split='test', **config)
+    test_loader = DataLoader(train_dataset, drop_last=False, shuffle=False, **config)
+    
     model = Model(config, logdir=rundir)
-
 
     trainer = Trainer(model=model,
                       train_dataset=train_sampler_batch,
-                      val_datasets={'train': train_sampler_batch, 'test': test_sampler_batch},
+                      val_datasets={'train': train_loader, 'test': test_loader},
                       config=config, rundir=rundir)
 
     trainer.train()
