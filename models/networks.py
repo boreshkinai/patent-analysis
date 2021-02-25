@@ -93,9 +93,13 @@ class FcrWnEmbeddings(torch.nn.Module):
                  embedding_dim: int, embedding_size: int, embedding_num: int):
         super().__init__()
 
+        self.embedding_num = embedding_num
         self.layer_width = layer_width
-
-        self.embeddings = [Embedding(num_embeddings=embedding_size, embedding_dim=embedding_dim)for _ in range(embedding_num)]
+        
+        if self.embedding_num > 0:
+            self.embeddings = [Embedding(num_embeddings=embedding_size, embedding_dim=embedding_dim)for _ in range(embedding_num)]
+        else:
+            self.embeddings = []
 
         self.encoder_blocks = [FCBlockNorm(num_layers=num_layers, layer_width=layer_width, dropout=dropout,
                                            size_in=size_in + embedding_dim * embedding_num, size_out=size_out)] + \
@@ -111,14 +115,16 @@ class FcrWnEmbeddings(torch.nn.Module):
         """
 
         ee = [x]
-        for i, v in enumerate(args):
-            ee.append(self.embeddings[i](v))
+        if self.embedding_num > 0:
+            for i, v in enumerate(args):
+                ee.append(self.embeddings[i](v))
         backcast = torch.cat(ee, dim=-1)
-
+        
+        forecast = 0.0
         for i, block in enumerate(self.encoder_blocks):
             backcast, f = block(backcast)
             forecast = forecast + f
 
-        return forecast
+        return {'prediction': forecast}
 
 

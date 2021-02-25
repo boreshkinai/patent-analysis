@@ -38,23 +38,24 @@ class Trainer:
                 self.train_losses[k] = (self.train_losses[k] * (n - 1) + v) / n
 
     def train(self):
-        last_iteration = self.model.restore()
-        inner = tqdm(total=self.config['iterations'], desc='Iteration', initial=last_iteration + 1)
+        last_iteration = self.model.restore()        
+        for iter in range(last_iteration + 1, self.config['epochs']):
+            
+            inner = tqdm(total=len(self.train_dataset), desc='Iteration')
+            for i, batch in enumerate(self.train_dataset):
+                inner.update(1)
+                iteration_start = time.time()
+                
+                for k, v in batch.items():
+                    batch[k] = v.cuda()
+                    
 
-        batch = self.train_dataset.getBatch()
-
-        for iter in range(last_iteration + 1, self.config['iterations']):
-            inner.update(1)
-            iteration_start = time.time()
-
-            batch = self.train_dataset.getBatch()
-            train_losses = self.model.optimize(batch)
-            self.update_train_losses(train_losses=train_losses, iter=iter)
-
+                train_losses = self.model.optimize(batch)
+                self.update_train_losses(train_losses=train_losses, iter=iter)
+                inner.set_postfix({key: value for (key, value) in self.train_losses.items()})
+            
             self.model.snapshot(iter=iter, training_losses=None, validation_losses=None)
-
-            inner.set_postfix({key: value for (key, value) in self.train_losses.items()})
-
+            
             if iter % self.config['evaluation_period'] == 0:
                 metrics = self.model.evaluate(self.val_datasets)
                 test_logs = {**metrics}

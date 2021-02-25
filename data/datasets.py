@@ -28,7 +28,7 @@ class CitationCountDataset(torch.utils.data.Dataset):
         df = df.reset_index()
         
         self.features = df[self.feature_names].values.astype(np.float32)
-        self.targets = df[self.feature_names].values.astype(np.float32)
+        self.targets = df[self.target_names].values.astype(np.float32)
         
     def __getitem__(self, index):
         history = self.features[index]

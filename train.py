@@ -19,7 +19,7 @@ def train(config: Dict, rundir: str):
     model = Model(config, logdir=rundir)
 
     trainer = Trainer(model=model,
-                      train_dataset=train_sampler_batch,
+                      train_dataset=train_loader,
                       val_datasets={'train': train_loader, 'test': test_loader},
                       config=config, rundir=rundir)
 

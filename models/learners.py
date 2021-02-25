@@ -141,33 +141,15 @@ class AbstractModel(ABC):
 class Forecaster(AbstractModel):
     def __init__(self, config: Dict, logdir: str):
         super().__init__(config=config, logdir=logdir)
-        self.losses["cross_entropy"] = nn.CrossEntropyLoss().cuda()
+        self.losses["mse"] = nn.MSELoss() # .cuda()
 
     def compute_loss(self, batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
-        predicted_labels = self.forward(batch)
-
-        predicted_labels = torch.flatten(predicted_labels, start_dim=0, end_dim=1)
-        target = torch.flatten(batch['QueryLabel'], start_dim=0, end_dim=1)
-
-        cross_entropy = self.losses["cross_entropy"](input=predicted_labels, target=target)
-        return {"cross_entropy": cross_entropy}
+        output = self.forward(batch)
+        mse_loss = self.losses["mse"](input=output['prediction'], target=batch['target'])
+        return {"mse": mse_loss}
 
     def forward(self, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
-        output = []
-        for i in range(inputs['SupportTensor'].shape[0]):
-            support_emb = self.nets.nets['features'](inputs['SupportTensor'][i])['features']
-            query_emb = self.nets.nets['features'](inputs['QueryTensor'][i])['features']
-
-            prototypes = torch.zeros(size=(5, support_emb.shape[-1])).cuda()
-            for l, e in zip(inputs['SupportLabel'][i], support_emb):
-                prototypes[l, :] = prototypes[l, :] + e
-            prototypes = prototypes / self.config['nSupport']
-
-            distances = query_emb[..., None] - torch.transpose(prototypes, 1, 0)
-            distances = - self.config['alpha'] * torch.norm(distances, dim=1)
-
-            output.append(distances)
-        return torch.stack(output, dim=0)
+        return self.nets.nets['features'](inputs['history'])
 
     @torch.no_grad()
     def evaluate(self, datasets: Dict) -> Dict[str, float]:
