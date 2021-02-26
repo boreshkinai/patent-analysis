@@ -16,7 +16,6 @@ class FCBlock(torch.nn.Module):
         self.fc_layers = [torch.nn.Linear(size_in, layer_width)]
         self.relu_layers = [torch.nn.LeakyReLU(inplace=True)]
         if dropout > 0.0:
-            print(dropout)
             self.fc_layers.append(torch.nn.Dropout(p=dropout))
             self.relu_layers.append(torch.nn.Identity())
         self.fc_layers += [torch.nn.Linear(layer_width, layer_width) for _ in range(num_layers - 1)]
@@ -97,13 +96,14 @@ class FcrWnEmbeddings(torch.nn.Module):
         self.layer_width = layer_width
         
         if self.embedding_num > 0:
-            self.embeddings = [Embedding(num_embeddings=embedding_size, embedding_dim=embedding_dim)for _ in range(embedding_num)]
+            self.embeddings = [Embedding(num_embeddings=embedding_size, 
+                                         embedding_dim=embedding_dim) for _ in range(embedding_num)]
         else:
             self.embeddings = []
 
-        self.encoder_blocks = [FCBlockNorm(num_layers=num_layers, layer_width=layer_width, dropout=dropout,
+        self.encoder_blocks = [FCBlock(num_layers=num_layers, layer_width=layer_width, dropout=dropout,
                                            size_in=size_in + embedding_dim * embedding_num, size_out=size_out)] + \
-                              [FCBlockNorm(num_layers=num_layers, layer_width=layer_width, dropout=dropout,
+                              [FCBlock(num_layers=num_layers, layer_width=layer_width, dropout=dropout,
                                            size_in=layer_width, size_out=size_out) for _ in range(num_blocks - 1)]
 
         self.model = torch.nn.ModuleList(self.encoder_blocks + self.embeddings)

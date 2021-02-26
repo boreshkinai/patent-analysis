@@ -21,11 +21,13 @@ class CitationCountDataset(torch.utils.data.Dataset):
         
         df['year'] = df['patent_date'].dt.year
         if self.split == "train":
-            df = df.query(f"year < {self.split_year}")
+            df = df.query(f"year == {self.split_year-1}")
         elif self.split == "test":
             df = df.query(f"year == {self.split_year}")
         
+        df.drop(columns=['citedby_patent_date'])
         df = df.reset_index()
+        df = df.dropna()
         
         self.features = df[self.feature_names].values.astype(np.float32)
         self.targets = df[self.target_names].values.astype(np.float32)

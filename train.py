@@ -20,7 +20,7 @@ def train(config: Dict, rundir: str):
 
     trainer = Trainer(model=model,
                       train_dataset=train_loader,
-                      val_datasets={'train': train_loader, 'test': test_loader},
+                      val_datasets={'test': test_loader}, # 'train': train_loader, 
                       config=config, rundir=rundir)
 
     trainer.train()

@@ -11,6 +11,7 @@ from models import networks
 import inspect
 import torch.nn as nn
 from models import learners
+from tqdm.auto import tqdm
 
 
 def logtanh(x: torch.Tensor) -> torch.Tensor:
@@ -89,6 +90,9 @@ class AbstractModel(ABC):
             n.train()
             n.zero_grad()
         self.optimizer.zero_grad()
+        
+        for k, v in batch.items():
+            batch[k] = v.cuda()
 
         losses = self.compute_loss(batch=batch)
         total_loss = 0.0
@@ -141,7 +145,7 @@ class AbstractModel(ABC):
 class Forecaster(AbstractModel):
     def __init__(self, config: Dict, logdir: str):
         super().__init__(config=config, logdir=logdir)
-        self.losses["mse"] = nn.MSELoss() # .cuda()
+        self.losses["mse"] = nn.MSELoss()
 
     def compute_loss(self, batch: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
         output = self.forward(batch)
@@ -149,28 +153,31 @@ class Forecaster(AbstractModel):
         return {"mse": mse_loss}
 
     def forward(self, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
-        return self.nets.nets['features'](inputs['history'])
+        naive = inputs['history'][:,[-1]]
+        prediction = self.nets.nets['features'](inputs['history'])
+        prediction['prediction'] = prediction['prediction'] + naive
+        return prediction
 
     @torch.no_grad()
     def evaluate(self, datasets: Dict) -> Dict[str, float]:
         super(Forecaster, self).evaluate(datasets=datasets)
 
-        NUM_EVALS = 100
         metrics = dict()
         for k, d in datasets.items():
             targets = []
             predictions = []
-            for i in range(NUM_EVALS):
-                e = d.getBatch()
-                p = self.forward(e)
+            for i, batch in tqdm(enumerate(d), total=len(d), leave=False, desc=f"Evaluation on {k}"):
+                for kk, vv in batch.items():
+                    batch[kk] = vv.cuda()
+                    
+                p = self.forward(batch)
+                targets.append(batch['target'])
+                predictions.append(p['prediction'])
 
-                targets.append(e['QueryLabel'].cpu().numpy())
-                predictions.append(torch.argmax(p, dim=-1).cpu().numpy())
+            targets = torch.cat(targets, dim=0)
+            predictions = torch.cat(predictions, dim=0)
 
-            targets = np.concatenate(targets)
-            predictions = np.concatenate(predictions)
-
-            metrics[f"{k}/acc"] = (targets == predictions).sum() / targets.size
+            metrics[f"{k}/mse"] = self.losses["mse"](input=predictions, target=targets)
 
         return metrics
 
