@@ -176,9 +176,14 @@ class Forecaster(AbstractModel):
 
             targets = torch.cat(targets, dim=0)
             predictions = torch.cat(predictions, dim=0)
-
-            metrics[f"{k}/mse"] = self.losses["mse"](input=predictions, target=targets)
-
+            
+            mse = self.losses["mse"](input=predictions, target=targets)
+            
+            var = self.losses["mse"](input=torch.mean(targets, dim=list(range(len(targets.shape))), keepdims=True), 
+                                                      target=targets)
+            metrics[f"{k}/mse"] = mse
+            metrics[f"{k}/R2"] = 100.0 * (var - mse) / var
+            
         return metrics
 
 

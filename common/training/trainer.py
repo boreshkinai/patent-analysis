@@ -40,12 +40,6 @@ class Trainer:
 
     def train(self):
         
-#         batch_fixed = {'history': torch.Tensor([[0., 0., 0., 0., 0.],
-#                                                 [0., 1., 1., 1., 2.]]).cuda(),
-#                        'target': torch.Tensor([[0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
-#                                                [2., 2., 3., 3., 3., 4., 5., 5., 5., 5.]]).cuda()}
-        
-        
         last_iteration = self.model.restore()        
         for iter in range(last_iteration + 1, self.config['epochs']):
             
@@ -57,7 +51,7 @@ class Trainer:
                 train_losses = self.model.optimize(batch)
                 self.update_train_losses(train_losses=train_losses, iter=i)
                 inner.set_postfix({key: value for (key, value) in self.train_losses.items()})
-                            
+                                            
             self.model.snapshot(iter=iter, training_losses=None, validation_losses=None)
             
             if iter % self.config['evaluation_period'] == 0:
@@ -75,7 +69,7 @@ class Trainer:
 
             self.model.finished_epoch(iter)
             inner.close()
-
+        
         inner.close()
         self.tensorboard.flush()
         self.tensorboard.close()
