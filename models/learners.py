@@ -157,6 +157,22 @@ class Forecaster(AbstractModel):
         prediction = self.nets.nets['features'](inputs['history'])
         prediction['prediction'] = prediction['prediction'] + naive
         return prediction
+    
+    @torch.no_grad()
+    def predict_on_loader(self, loader: torch.utils.data.DataLoader) -> Dict[str, np.ndarray]:
+        super(Forecaster, self).evaluate(datasets=None)
+
+        predictions = []
+        for i, batch in tqdm(enumerate(loader), total=len(loader), leave=False, desc=f"Predict"):
+            for kk, vv in batch.items():
+                batch[kk] = vv.cuda()
+
+            p = self.forward(batch)
+            predictions.append(p['prediction'])
+
+        predictions = torch.cat(predictions, dim=0).cpu()
+            
+        return predictions
 
     @torch.no_grad()
     def evaluate(self, datasets: Dict) -> Dict[str, float]:
