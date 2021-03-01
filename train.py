@@ -14,7 +14,7 @@ def train(config: Dict, rundir: str):
     train_loader = DataLoader(train_dataset, drop_last=True, shuffle=True, **config)
     
     test_dataset = Dataset(split='test', **config)
-    test_loader = DataLoader(train_dataset, drop_last=False, shuffle=False, **config)
+    test_loader = DataLoader(test_dataset, drop_last=False, shuffle=False, **config)
     
     model = Model(config, logdir=rundir)
 
