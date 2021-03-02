@@ -6,3 +6,4 @@ gitpython
 dask[complete] 
 pyarrow 
 seaborn
+sklearn
