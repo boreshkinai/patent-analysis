@@ -22,6 +22,11 @@ RUN apt-get install -y curl grep sed dpkg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# This is to enable cartopy and python-snappy installations
+RUN apt-get update
+
+RUN apt-get install libproj-dev proj-data proj-bin libgeos-dev libsnappy-dev -y
+
 ENV PATH /opt/conda/bin:$PATH
 
 RUN conda install python=3.6.7
@@ -37,9 +42,8 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py tensorflow-mkl tensorboard
 
-COPY ./requirements.txt ./requirements.txt
+RUN pip install keras celery statsmodels gitpython dask[complete] seaborn sklearn colorcet==2.0.1 datashader==0.7.0 fastparquet==0.3.0 geoviews==1.6.2 holoviews==1.12.3 matplotlib==3.0.3 python-snappy==0.5.4
 
-RUN pip install -r requirements.txt -f https://download.pytorch.org/whl/torch_stable.html
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
 
