@@ -96,8 +96,8 @@ class FcrWnEmbeddings(torch.nn.Module):
         self.layer_width = layer_width
         
         if self.embedding_num > 0:
-            self.embeddings = [Embedding(num_embeddings=embedding_size, 
-                                         embedding_dim=embedding_dim) for _ in range(embedding_num)]
+            self.embeddings = [torch.nn.Embedding(num_embeddings=embedding_size, 
+                                                  embedding_dim=embedding_dim) for _ in range(embedding_num)]
         else:
             self.embeddings = []
 
@@ -113,13 +113,16 @@ class FcrWnEmbeddings(torch.nn.Module):
         x the continuous input
         e the categorical inputs
         """
-
+        
         ee = [x]
         if self.embedding_num > 0:
-            for i, v in enumerate(args):
-                ee.append(self.embeddings[i](v))
+            for i, v in enumerate(args):                
+                e = self.embeddings[i](v.long())
+                if len(e.shape) == 3:
+                    e = e.mean(dim=1)
+                ee.append(e)
         backcast = torch.cat(ee, dim=-1)
-        
+                
         forecast = 0.0
         for i, block in enumerate(self.encoder_blocks):
             backcast, f = block(backcast)

@@ -154,7 +154,13 @@ class Forecaster(AbstractModel):
 
     def forward(self, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
         naive = inputs['history'][:,[-1]]
-        prediction = self.nets.nets['features'](inputs['history'])
+        
+        categorical = []
+        for k, v in inputs.items():
+            if k not in ['history', 'target']:
+                categorical.append(inputs[k])
+                        
+        prediction = self.nets.nets['features'](inputs['history'], *categorical)
         prediction['prediction'] = prediction['prediction'] + naive
         return prediction
     
