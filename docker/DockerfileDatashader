@@ -42,7 +42,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py tensorflow-mkl tensorboard
 
-RUN pip install keras celery statsmodels gitpython dask[complete] seaborn sklearn nomkl colorcet==2.0.1 datashader==0.7.0 fastparquet==0.3.0 geoviews==1.6.2 holoviews==1.12.3 matplotlib==3.0.3 python-snappy==0.5.4
+RUN pip install keras celery statsmodels gitpython dask[complete] seaborn sklearn colorcet==2.0.1 datashader==0.7.0 fastparquet==0.3.0 geoviews==1.6.2 holoviews==1.12.3 matplotlib==3.0.3 python-snappy==0.5.4
 
 
 ENTRYPOINT [ "/usr/bin/tini", "--" ]
