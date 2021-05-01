@@ -43,7 +43,7 @@ ENV LANG C.UTF-8
 RUN conda install -y numpy pymongo scipy pandas jupyter pillow requests matplotlib tqdm \
     h5py tensorflow-mkl tensorboard
     
-RUN pip install keras celery statsmodels gitpython dask[complete] seaborn sklearn colorcet datashader fastparquet geoviews holoviews matplotlib python-snappy spatialpandas scikit-image geopandas selenium
+RUN pip install keras celery statsmodels gitpython dask[complete] seaborn sklearn colorcet datashader fastparquet geoviews holoviews matplotlib python-snappy spatialpandas scikit-image geopandas selenium xlwt bootstrapped
 
 RUN conda install -c conda-forge -y geckodriver # this is to support firefox with selenium
 
